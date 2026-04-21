@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍕 {{ pizzeria_name }} Pizzaria - Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8; --surface: #fff; --rust: #c94a2a; --rust-dark: #a33820;
+    --char: #1a1208; --muted: #8a7f72; --gold: #d4a843; --green: #3a8f44;
+    --border: #e0d6c8; --shadow: 0 2px 16px rgba(26,18,8,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--char); min-height: 100vh; }
+
+  header {
+    background: var(--char); padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between; height: 70px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  }
+  .logo { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.7rem; font-weight: 900; }
+  .logo span { color: var(--rust); }
+  nav a { color: #b0a090; text-decoration: none; margin-left: 1.5rem; font-size: .85rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 500; transition: color .2s; }
+  nav a:hover { color: var(--gold); }
+  nav a.active { color: var(--gold); }
+
+  .admin-banner {
+    background: linear-gradient(90deg, var(--char), #2d1e0e);
+    color: #fff; padding: 1.5rem 2rem; border-bottom: 3px solid var(--rust);
+  }
+  .admin-banner h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 900; }
+  .admin-banner p { color: #b0a090; font-size: .875rem; margin-top: .25rem; }
+
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 2rem; padding: 2rem; max-width: 1300px; margin: 0 auto; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; height: fit-content; }
+  .panel-header { background: var(--rust); padding: 1rem 1.5rem; color: #fff; font-weight: 700; text-transform: uppercase; }
+  .panel-body { padding: 1.5rem; }
+  
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: .4rem; }
+  .field input, .field textarea {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: .6rem .9rem; font-size: .95rem; background: #fdf9f4; outline: none;
+  }
+  .btn-add {
+    width: 100%; background: var(--rust); color: #fff; border: none; border-radius: 10px;
+    padding: .75rem; font-size: 1rem; font-weight: 700; cursor: pointer;
+  }
+
+  .list-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); margin-bottom: 1rem; padding-bottom: 0.5rem; }
+  .list-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; }
+  .pill { background: var(--rust); color: #fff; border-radius: 50px; padding: .2rem .7rem; font-size: .78rem; font-weight: 700; }
+
+  .pizza-row { background: #fdf9f4; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: .85rem; overflow: hidden; }
+  .pizza-row.unavailable { opacity: .55; }
+  .row-inner { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.1rem; }
+  .row-emoji { font-size: 2rem; flex-shrink: 0; }
+  .row-info { flex: 1; min-width: 0; }
+  .row-name { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: .5rem; margin-bottom: .3rem; }
+  .status-badge { font-size: .7rem; padding: .15rem .5rem; border-radius: 50px; font-weight: 700; text-transform: uppercase; }
+  .status-badge.on { background: rgba(58,143,68,0.12); color: var(--green); }
+  .status-badge.off { background: rgba(201,74,42,0.12); color: var(--rust); }
+
+  /* Ingredients inline field */
+  .row-ingredients-wrapper {
+    display: flex; align-items: baseline; gap: .35rem;
+    font-size: .82rem; margin-top: .1rem;
+  }
+
+  .row-ingredients-label {
+    font-size: .75rem; font-weight: 700; color: var(--char);
+    white-space: nowrap; text-transform: uppercase; letter-spacing: .4px;
+    flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .editable-ingredients {
+    flex: 1; min-width: 0;
+    background: transparent; border: 1px solid transparent;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: .82rem; outline: none; resize: none;
+    overflow: hidden; line-height: 1.45;
+    padding: 1px 4px; border-radius: 4px;
+    height: auto; min-height: 1.45em;
+  }
+  .editable-ingredients:hover, .editable-ingredients:focus {
+    border-color: var(--border); background: #fff; color: var(--char);
+    resize: vertical;
+  }
+
+  /* Editable price */
+  .row-price-container { display: flex; align-items: center; font-weight: 700; color: var(--rust); font-family: 'Playfair Display', serif; font-size: 1.05rem; flex-shrink: 0; }
+  .editable-price { 
+    background: transparent; border: 1px solid transparent; color: var(--rust); 
+    font-family: inherit; font-size: inherit; font-weight: inherit; width: 70px; outline: none; padding: 2px;
+  }
+  .editable-price:hover, .editable-price:focus { border-color: var(--border); background: #fff; border-radius: 4px; }
+
+  .row-actions { display: flex; gap: .5rem; padding: 0 1.1rem .85rem 4.5rem; }
+  .btn-sm { border: 1.5px solid transparent; border-radius: 8px; padding: .35rem .85rem; font-size: .8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+  .btn-toggle { background: transparent; border-color: var(--muted); color: var(--muted); }
+  .btn-toggle.active { background: rgba(58,143,68,0.1); border-color: var(--green); color: var(--green); }
+  .btn-delete { background: transparent; border-color: rgba(201,74,42,0.3); color: var(--rust); }
+  .btn-delete:hover { background: var(--rust); color: #fff; }
+
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--char); color: #fff; padding: .75rem 1.25rem; border-radius: 12px; opacity: 0; transition: 0.3s; z-index: 999; }
+  .toast.show { opacity: 1; transform: translateY(-10px); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">{{ pizzeria_name }} <span>Pizzaria</span></div>
+  <nav><a href="/">Menu</a><a href="/kitchen">Kitchen</a><a href="/admin" class="active">Admin</a></nav>
+</header>
+
+<div class="admin-banner">
+  <h1>🍕 Admin Panel</h1>
+  <p>Manage your pizza menu — add, disable, or remove pizzas.</p>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <div class="panel-header">➕ Add New Pizza</div>
+    <div class="panel-body">
+      <div class="field"><label>Pizza Name *</label><input id="fName" type="text" /></div>
+      <div class="field"><label>Ingredients *</label><textarea id="fIngredients"></textarea></div>
+      <div class="field"><label>Price (€) *</label><input id="fPrice" type="number" step="0.5" /></div>
+      <button class="btn-add" onclick="addPizza()">Add to Menu 🍕</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-body">
+      <div class="list-header">
+        <div class="list-title">All Pizzas</div>
+        <span class="pill" id="totalCount">0</span>
+      </div>
+      <div id="pizzaList">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const pizzaEmojis = {
+  'Margherita': '🌿',
+  'Pepperoni': '🥩',
+  'Diavola': '🌶️',
+  'Quattro Formaggi': '🧀',
+  'Vegetariana': '🥦',
+  'Atum com Catupiry': '🐟',
+  'A Moda da Casa': '👨‍🍳',
+};
+function getEmoji(name) {
+  if (pizzaEmojis[name]) return pizzaEmojis[name];
+  const n = name.toLowerCase();
+  if (n.includes('chicken') || n.includes('frango')) return '🍗';
+  if (n.includes('shrimp') || n.includes('camar')) return '🍤';
+  if (n.includes('tuna') || n.includes('atum')) return '🐟';
+  if (n.includes('pepperoni') || n.includes('meat') || n.includes('carne')) return '🥩';
+  if (n.includes('cheese') || n.includes('queijo') || n.includes('formaggi')) return '🧀';
+  if (n.includes('vegeta') || n.includes('vegan')) return '🥦';
+  if (n.includes('margher')) return '🌿';
+  if (n.includes('diavol') || n.includes('spicy') || n.includes('picante')) return '🌶️';
+  if (n.includes('ham') || n.includes('presunto')) return '🍖';
+  if (n.includes('mushroom') || n.includes('cogumelo')) return '🍄';
+  if (n.includes('onion') || n.includes('cebola')) return '🧅';
+  if (n.includes('tomato') || n.includes('tomate')) return '🍅';
+  if (n.includes('olive') || n.includes('azeitona')) return '🫒';
+  return '🍕';
+}
+let pizzas = [];
+
+async function load() {
+  const res = await fetch('/api/admin/pizzas');
+  pizzas = await res.json();
+  renderList();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function renderList() {
+  const el = document.getElementById('pizzaList');
+  document.getElementById('totalCount').textContent = pizzas.length;
+  
+  el.innerHTML = [...pizzas].sort((a, b) => a.name.localeCompare(b.name)).map((p, i) => `
+    <div class="pizza-row ${p.available ? '' : 'unavailable'}">
+      <div class="row-inner">
+        <div class="row-emoji">${getEmoji(p.name)}</div>
+        <div class="row-info">
+          <div class="row-name">
+            ${p.name}
+            <span class="status-badge ${p.available ? 'on' : 'off'}">${p.available ? 'On Menu' : 'Disabled'}</span>
+          </div>
+          <div class="row-ingredients-wrapper">
+            <span class="row-ingredients-label">Ingredientes:</span>
+            <textarea class="editable-ingredients" rows="1"
+              onblur="updateIngredients(${p.id}, this.value)"
+              oninput="autoResize(this)"
+            >${p.ingredients.trim()}</textarea>
+          </div>
+        </div>
+        <div class="row-price-container">
+          €<input type="number" step="0.1" class="editable-price" value="${parseFloat(p.price).toFixed(2)}" 
+            onblur="updatePrice(${p.id}, this.value, '${p.name}', '${p.ingredients}')">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn-sm btn-toggle ${p.available ? 'active' : ''}" onclick="togglePizza(${p.id})">
+          ${p.available ? '✓ Enabled' : '✗ Disabled'} — Toggle
+        </button>
+        <button class="btn-sm btn-delete" onclick="deletePizza(${p.id}, '${p.name}')">🗑 Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Auto-size all ingredient textareas after render
+  document.querySelectorAll('.editable-ingredients').forEach(autoResize);
+}
+
+async function updatePrice(id, newPrice, name, ingredients) {
+  await fetch(`/api/admin/pizzas/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name, ingredients, price: newPrice })
+  });
+  showToast('Price updated!');
+}
+
+async function updateIngredients(id, ingredients) {
+  await fetch(`/api/admin/pizzas/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ ingredients })
+  });
+  showToast('Ingredients updated!');
+}
+
+async function addPizza() {
+  const name = document.getElementById('fName').value;
+  const ingredients = document.getElementById('fIngredients').value;
+  const price = document.getElementById('fPrice').value;
+  await fetch('/api/admin/pizzas', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name, ingredients, price })
+  });
+  document.getElementById('fName').value = '';
+  document.getElementById('fIngredients').value = '';
+  document.getElementById('fPrice').value = '';
+  load();
+}
+
+async function togglePizza(id) {
+  await fetch(`/api/admin/pizzas/${id}/toggle`, { method: 'POST' });
+  load();
+}
+
+async function deletePizza(id, name) {
+  if (!confirm(`Delete ${name}?`)) return;
+  await fetch(`/api/admin/pizzas/${id}`, { method: 'DELETE' });
+  load();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.className = 'toast show';
+  setTimeout(() => t.className = 'toast', 2000);
+}
+
+load();
+</script>
+</body>
+</html>

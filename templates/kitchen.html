@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍕 Kitchen Display — {{ pizzeria_name }} Pizzaria</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c; --surface: #1c1a16; --border: #2e2a22;
+    --orange: #e86c2a; --green: #4caf50; --gold: #d4a843;
+    --text: #f0e8d8; --muted: #7a7060;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 64px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--orange); letter-spacing: 2px; }
+  
+  .lang-switcher { display: flex; gap: 10px; align-items: center; }
+  .lang-btn { 
+    background: #25221b; border: 1px solid var(--border); color: var(--text); 
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+    display: flex; align-items: center; gap: 6px; transition: 0.2s;
+  }
+  .lang-btn:hover { border-color: var(--gold); }
+  .lang-btn.active { border-color: var(--orange); background: rgba(232,108,42,0.15); color: var(--orange); }
+  .flag { font-size: 1.1rem; }
+
+  .kds-header {
+    background: linear-gradient(90deg, var(--surface) 0%, #201e18 100%);
+    border-bottom: 2px solid var(--orange); padding: 1.25rem 2rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .kds-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; color: var(--text); }
+  .kds-title span { color: var(--orange); }
+  .badge-count { background: var(--orange); color: #fff; border-radius: 50px; padding: .3rem .9rem; font-size: .85rem; font-weight: 600; }
+  
+  .live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: .5rem; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .orders-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 1.5rem; padding: 2rem; max-width: 1800px; margin: 0 auto; 
+  }
+
+  .ticket {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; 
+    animation: slideIn .35s ease both; position: relative;
+  }
+  .ticket.done-anim { animation: slideOut .4s ease forwards; pointer-events: none; }
+  
+  @keyframes slideIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: none; } }
+  @keyframes slideOut { to { opacity:0; transform: scale(.9) translateY(-20px); } }
+
+  .ticket-header { background: #28231c; border-bottom: 1px solid var(--border); padding: .85rem 1.1rem; display: flex; align-items: center; justify-content: space-between; border-radius: 14px 14px 0 0; }
+  .ticket-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--orange); }
+  .ticket-table { font-size: .9rem; background: rgba(232,108,42,0.15); color: var(--orange); border-radius: 6px; padding: .3rem .7rem; font-weight: 800; }
+
+  .ticket-body { padding: 1.2rem 1.1rem; flex: 1; }
+  .pizza-name { font-size: 1.4rem; font-weight: 800; color: var(--text); margin-bottom: .6rem; text-transform: uppercase; line-height: 1.1; }
+  
+  .pizza-ingredients { 
+    font-size: .9rem; color: var(--muted); line-height: 1.5; border-left: 3px solid var(--gold); 
+    padding-left: 12px; margin: 12px 0; font-style: italic;
+  }
+  
+  .ticket-notes { background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.3); border-radius: 8px; padding: .7rem; margin-top: 1rem; font-size: .85rem; color: var(--gold); font-weight: 500; }
+
+  .ticket-footer { padding: 1.1rem; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); border-radius: 0 0 14px 14px; }
+  .btn-done {
+    width: 100%; background: linear-gradient(90deg, #3a8f44, #2d7a38); color: #fff; border: none; border-radius: 10px;
+    padding: .9rem; font-size: 1.1rem; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
+  }
+  .btn-done:hover { transform: scale(1.02); filter: brightness(1.2); }
+
+  .elapsed { font-size: .8rem; color: var(--muted); text-align: center; margin-bottom: .6rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+  .elapsed.warn { color: var(--gold); }
+  .elapsed.urgent { color: #ff4d4d; animation: blink .8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍕 {{ pizzeria_name }} Kitchen Display</div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" id="btn-pt" onclick="setLang('pt', this)"><span class="flag">🇧🇷</span> PT</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en', this)"><span class="flag">🇬🇧</span> EN</button>
+    <button class="lang-btn" id="btn-nl" onclick="setLang('nl', this)"><span class="flag">🇳🇱</span> NL</button>
+  </div>
+</header>
+
+<div class="kds-header">
+  <div class="kds-title">{{ pizzeria_name }} <span>Orders</span></div>
+  <div>
+    <span class="live-dot"></span><span id="txt-live" style="color:var(--muted); font-size:.85rem; font-weight:bold; margin-right:15px">AO VIVO</span>
+    <span class="badge-count" id="orderCount">0 pedidos</span>
+  </div>
+</div>
+
+<div class="orders-grid" id="ordersGrid"></div>
+
+<script>
+// --- CONFIGURAÇÃO GLOBAL ---
+let ingredientMap = {};
+let pizzaNameMap = {};
+let currentLang = 'pt';
+let orders = [];
+
+const uiI18n = {
+    pt: { live: 'AO VIVO', orders: 'pedidos', urgent: 'URGENTE', ago: 'atrás', table: 'MESA', done: 'CONCLUIR', empty: '✅ Cozinha limpa! Sem pedidos.' },
+    en: { live: 'LIVE', orders: 'orders', urgent: 'URGENT', ago: 'ago', table: 'TABLE', done: 'MARK AS DONE', empty: '✅ Kitchen clear! No pending orders.' },
+    nl: { live: 'LIVE', orders: 'bestellingen', urgent: 'SPOED', ago: 'geleden', table: 'TAFEL', done: 'KLAAR', empty: '✅ Keuken is leeg! Geen bestellingen.' }
+};
+
+/**
+ * 1. INICIALIZAÇÃO
+ */
+async function initKitchen() {
+  try {
+    // Carrega o dicionário central do Python
+    const configRes = await fetch('/api/config');
+    const configData = await configRes.json();
+    ingredientMap = configData.ingredients;
+    pizzaNameMap = configData.pizzas;
+
+    // Carrega os pedidos
+    await loadOrders();
+    
+    // Polling a cada 5 segundos
+    setInterval(loadOrders, 5000);
+  } catch (err) {
+    console.error("Erro ao carregar sistema:", err);
+  }
+}
+
+/**
+ * 2. TRADUÇÃO DINÂMICA
+ */
+function translateText(text, lang) {
+    if (!text || lang === 'pt' || !ingredientMap) return text;
+    
+    let translated = text;
+    const sortedKeys = Object.keys(ingredientMap).sort((a, b) => b.length - a.length);
+
+    sortedKeys.forEach(key => {
+        // \b garante tradução exata (sem quebrar palavras como "saucand")
+        const regex = new RegExp('\\b' + key + '\\b', 'gi');
+        if (ingredientMap[key] && ingredientMap[key][lang]) {
+            translated = translated.replace(regex, ingredientMap[key][lang]);
+        }
+    });
+    return translated;
+}
+
+/**
+ * 3. BUSCAR PEDIDOS
+ */
+async function loadOrders() {
+  try {
+    const res = await fetch('/api/orders/pending');
+    const data = await res.json();
+    
+    // Só renderiza se houver mudança ou na primeira carga
+    if (JSON.stringify(data) !== JSON.stringify(orders)) {
+        orders = data;
+        render();
+    }
+  } catch (err) { 
+    console.error("Erro ao buscar pedidos:", err); 
+  }
+}
+
+/**
+ * 4. INTERFACE
+ */
+function setLang(lang, btn) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    
+    document.getElementById('txt-live').textContent = uiI18n[lang].live;
+    render();
+}
+
+function getElapsed(created, lang) {
+  // Converte a data do SQLite para timestamp
+  const diff = Math.floor((Date.now() - new Date(created + 'Z')) / 1000);
+  const t = uiI18n[lang];
+  
+  if (diff < 60) return { label: `${diff}s ${t.ago}`, cls: '' };
+  const m = Math.floor(diff / 60);
+  if (m < 10) return { label: `${m}m ${t.ago}`, cls: 'warn' };
+  return { label: `${m}m ${t.ago} — ${t.urgent}`, cls: 'urgent' };
+}
+
+/**
+ * 5. RENDERIZAÇÃO
+ */
+function render() {
+  const grid = document.getElementById('ordersGrid');
+  const t = uiI18n[currentLang];
+  
+  const countBadge = document.getElementById('orderCount');
+  if (countBadge) countBadge.textContent = `${orders.length} ${t.orders}`;
+  
+  if (!orders.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:8rem 2rem;color:var(--muted);font-size:1.4rem;font-weight:500;">${t.empty}</div>`;
+    return;
+  }
+
+  grid.innerHTML = orders.map(o => {
+    const e = getElapsed(o.created_at, currentLang);
+    
+    // Traduz nome da pizza (tenta mapa exato, se não, tenta genérico)
+    const displayName = pizzaNameMap[o.pizza_name]?.[currentLang] || translateText(o.pizza_name, currentLang);
+    // Traduz ingredientes
+    const displayIng = translateText(o.ingredients, currentLang);
+
+    return `
+    <div class="ticket" id="ticket-${o.id}">
+      <div class="ticket-header">
+        <div class="ticket-num">ORDEM #${String(o.id).padStart(3,'0')}</div>
+        <div class="ticket-table">${t.table} ${o.table_number || '?'}</div>
+      </div>
+      <div class="ticket-body">
+        <div class="pizza-name">${displayName}</div> 
+        <div class="pizza-ingredients">${displayIng}</div>
+        ${o.notes ? `<div class="ticket-notes">⚠️ ${o.notes}</div>` : ''}
+      </div>
+      <div class="ticket-footer">
+        <div class="elapsed ${e.cls}">⏱ ${e.label}</div>
+        <button class="btn-done" onclick="markDone(${o.id})">${t.done}</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+/**
+ * 6. AÇÕES
+ */
+async function markDone(id) {
+  const ticket = document.getElementById(`ticket-${id}`);
+  if(ticket) ticket.classList.add('done-anim');
+  
+  try {
+    const res = await fetch(`/api/orders/${id}/done`, { method: 'POST' });
+    if (res.ok) {
+        setTimeout(loadOrders, 400); // Aguarda animação de saída
+    }
+  } catch (err) {
+    console.error("Erro ao completar pedido:", err);
+  }
+}
+
+// Início automático
+initKitchen();
+</script>
+</body>
+</html>

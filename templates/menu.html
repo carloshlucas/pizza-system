@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍕 {{ pizzeria_name }} Pizzaria — Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf6ef; --rust: #c94a2a; --rust-dark: #a33820;
+    --char: #1a1208; --warm-gray: #8a7f72; --gold: #d4a843;
+    --card-bg: #fff9f0; --shadow: 0 4px 24px rgba(26,18,8,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--cream); font-family: 'DM Sans', sans-serif; color: var(--char); min-height: 100vh; }
+
+  header {
+    background: var(--char); padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 70px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.7rem; font-weight: 900; }
+  .logo span { color: var(--rust); }
+
+  .lang-picker { display: flex; gap: 0.5rem; }
+  .lang-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid var(--warm-gray);
+    color: #fff; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer;
+    font-size: 0.75rem; font-weight: 600; transition: 0.2s;
+  }
+  .lang-btn.active { background: var(--gold); border-color: var(--gold); color: var(--char); }
+
+  .hero {
+    background: linear-gradient(135deg, var(--char) 0%, #2d1e0e 100%);
+    padding: 3rem 2rem; text-align: center;
+  }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: #fff; line-height: 1.1; }
+  .hero h1 em { color: var(--gold); font-style: normal; }
+  .hero p { color: #b0a090; margin-top: .75rem; font-size: 1rem; }
+
+  .table-bar { background: var(--rust); display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .85rem; }
+  .table-bar label { color: #fff; font-size: .9rem; font-weight: 600; }
+  .table-bar input { border-radius: 8px; border: none; padding: .4rem .9rem; width: 140px; outline: none; font-weight: bold; }
+
+  .section-title { text-align: center; padding: 2.5rem 1rem 1rem; font-family: 'Playfair Display', serif; font-size: 1.8rem; }
+  .section-title span { color: var(--rust); }
+
+  /* Container da Lista */
+  .grid { display: flex; flex-direction: column; gap: 10px; padding: 0 1rem 3rem; max-width: 800px; /* Lista fica melhor mais estreita */ margin: 0 auto;}
+
+  /* Estilo de Linha (List Item) */
+  .card { background: var(--card-bg); border-radius: 12px; display: flex; align-items: center; padding: 12px 20px; gap: 20px; box-shadow: var(--shadow); border: 1px solid rgba(212,168,67,0.1); }
+
+  .card-emoji { 
+    font-size: 2rem; 
+    padding: 0; /* Remove o padding do estilo antigo */
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .card-body { 
+    display: grid;
+    grid-template-columns: 1fr auto auto; /* Nome | Preço | Botão */
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+  }
+
+  .card-info { flex: 1; } /* Container para nome e ingredientes */
+
+  .card-name { font-size: 1.2rem; margin: 0; }
+  .card-ingredients { margin: 2px 0 0; font-size: 0.8rem; }
+
+  .card-price { 
+    font-size: 1.1rem; 
+    min-width: 70px; 
+    text-align: right; 
+  }
+
+/* Ajuste para Mobile */
+@media (max-width: 600px) {
+  .card-body { grid-template-columns: 1fr auto; }
+  .btn-order { grid-column: span 2; width: 100%; margin-top: 5px; }
+}
+  .btn-order { background: var(--rust); color: #fff; border: none; border-radius: 10px; padding: .6rem 1.2rem; cursor: pointer; font-weight: 600; transition: .2s; }
+  .btn-order:hover { background: var(--rust-dark); }
+  
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .overlay.open { display: flex; }
+  .modal { background: var(--card-bg); padding: 2rem; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  
+  .toast { 
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); 
+    padding: 12px 24px; border-radius: 50px; color: #fff; transition: 0.4s; z-index: 1000; font-weight: 600;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.success { background: #2d7a4a; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">{{ pizzeria_name }} <span>Pizzaria</span> - Menu</div>
+  <div class="lang-picker">
+    <button class="lang-btn active" id="btn-pt" onclick="setLang('pt')">PT 🇧🇷</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN 🇬🇧</button>
+    <button class="lang-btn" id="btn-nl" onclick="setLang('nl')">NL 🇳🇱</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1 id="hero-title"><em>Fogo</em>, massa<br>& diversão</h1>
+  <p id="hero-subtitle">Ingredientes frescos, forno a lenha. Peça abaixo.</p>
+</div>
+
+<div class="table-bar">
+  <label id="label-table">Sua Mesa:</label>
+  <input id="tableNum" type="text" placeholder="Mesa 1" />
+</div>
+
+<div class="section-title"><span id="section-menu">Nossas Pizzas</span></div>
+<div class="grid" id="pizzaGrid"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle"></h2>
+    <p id="modalSub" style="font-size: 0.8rem; color: var(--warm-gray); margin-bottom: 1rem;"></p>
+    <textarea id="modalNotes" style="width:100%; height:80px; padding:10px; border-radius:10px; border:1px solid #ddd; font-family: sans-serif;"></textarea>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button onclick="closeModal()" id="btn-cancel" style="flex:1; padding:12px; border-radius:10px; border:none; cursor:pointer; font-weight:bold; background:#eee;">Cancelar</button>
+        <button id="btn-confirm-text" onclick="confirmOrder()" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--rust); color:#fff; font-weight:bold; cursor:pointer;">Pedir</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// --- CONFIGURAÇÃO GLOBAL ---
+let ingredientMap = {};
+let pizzaNameMap = {};
+let currentLang = 'pt';
+let pizzasFromDb = [];
+let selectedPizza = null;
+
+const uiI18n = {
+  pt: { heroT: "Fogo, <em>massa</em><br>& diversão", heroS: "Ingredientes frescos, forno a lenha. Peça abaixo.", table: "Sua Mesa:", menu: "Nossas Pizzas", order: "Pedir Agora", confirm: "Finalizar Pedido 🍕", cancel: "Cancelar", msg: "pedido! Cozinhando agora!", notes: "Observações (ex: sem cebola)...", tablePlaceholder: "Mesa 1" },
+  en: { heroT: "Fire, <em>dough</em><br>& fun", heroS: "Fresh ingredients, wood-fired. Order below.", table: "Your Table:", menu: "Our Pizzas", order: "Order Now", confirm: "Place Order 🍕", cancel: "Cancel", msg: "ordered! Cooking now!", notes: "Observations (ex: no onions)...", tablePlaceholder: "Table 1" },
+  nl: { heroT: "Vuur, <em>deeg</em><br>& gezelligheid", heroS: "Verse ingrediënten, houtoven. Bestel hieronder.", table: "Uw Tafel:", menu: "Onze Pizza's", order: "Nu Bestellen", confirm: "Bestelling Plaatsen 🍕", cancel: "Annuleren", msg: "besteld! We gaan bakken!", notes: "Opmerkingen (bijv. geen ui)...", tablePlaceholder: "Tafel 1" }
+};
+
+// 1. INICIALIZAÇÃO CENTRALIZADA
+async function initSystem() {
+  try {
+    const configRes = await fetch('/api/config');
+    const configData = await configRes.json();
+    ingredientMap = configData.ingredients;
+    pizzaNameMap = configData.pizzas;
+
+    const pizzaRes = await fetch('/api/pizzas');
+    let data = await pizzaRes.json();
+
+    // --- ADICIONE ESTA LINHA PARA ORDEM ALFABÉTICA ---
+    pizzasFromDb = data.sort((a, b) => a.name.localeCompare(b.name));
+
+    setLang('pt');
+  } catch (e) {
+    console.error("Erro ao carregar:", e);
+  }
+}
+
+// 2. LÓGICA DE TRADUÇÃO
+function translateFromPT(text, lang) {
+  if (!text || lang === 'pt' || !ingredientMap) return text;
+  
+  let translated = text;
+  const sortedKeys = Object.keys(ingredientMap).sort((a, b) => b.length - a.length);
+
+  sortedKeys.forEach(key => {
+    // O '\\b' impede que mude letras dentro de outras palavras (ex: 'e' em 'sauce')
+    const regex = new RegExp('\\b' + key + '\\b', 'gi');
+    if (ingredientMap[key] && ingredientMap[key][lang]) {
+      translated = translated.replace(regex, ingredientMap[key][lang]);
+    }
+  });
+  return translated;
+}
+
+// 3. RENDERIZAÇÃO E UI
+function renderMenu() {
+  const grid = document.getElementById('pizzaGrid');
+  if (!grid) return;
+
+  grid.innerHTML = pizzasFromDb.map(p => {
+    const displayName = pizzaNameMap[p.name]?.[currentLang] || translateFromPT(p.name, currentLang);
+    const displayIng = translateFromPT(p.ingredients, currentLang);
+    const emoji = getEmojiForMenu(p.name, p.ingredients);
+
+    return `
+    <div class="card">
+      <div class="card-emoji">${emoji}</div>
+      <div class="card-body">
+        <div class="card-info">
+          <div class="card-name">${displayName}</div>
+          <div class="card-ingredients">${displayIng}</div>
+        </div>
+        <div class="card-price">€${parseFloat(p.price).toFixed(2)}</div>
+        <button class="btn-order" onclick="openModal(${p.id})">
+          ${uiI18n[currentLang].order}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById(`btn-${lang}`);
+  if(activeBtn) activeBtn.classList.add('active');
+
+  const ui = uiI18n[lang];
+  document.getElementById('hero-title').innerHTML = ui.heroT;
+  document.getElementById('hero-subtitle').innerText = ui.heroS;
+  document.getElementById('label-table').innerText = ui.table;
+  document.getElementById('section-menu').innerText = ui.menu;
+  document.getElementById('modalNotes').placeholder = ui.notes;
+  document.getElementById('btn-confirm-text').innerText = ui.confirm;
+  document.getElementById('btn-cancel').innerText = ui.cancel;
+  document.getElementById('tableNum').placeholder = ui.tablePlaceholder;
+  
+  renderMenu();
+}
+
+function getEmojiForMenu(name, ingredients) {
+  const text = (name + ' ' + (ingredients || '')).toLowerCase();
+  if (text.includes('chicken') || text.includes('frango')) return '🍗';
+  if (text.includes('tuna') || text.includes('atum')) return '🐟';
+  if (text.includes('pepperoni') || text.includes('calabresa')) return '🥩';
+  if (text.includes('corn') || text.includes('milho')) return '🌽';
+  if (text.includes('vegeta')) return '🥦';
+  return '🍕';
+}
+
+function openModal(id) {
+  selectedPizza = pizzasFromDb.find(p => p.id === id);
+  const displayName = pizzaNameMap[selectedPizza.name]?.[currentLang] || translateFromPT(selectedPizza.name, currentLang);
+  const displayIng = translateFromPT(selectedPizza.ingredients, currentLang);
+  
+  document.getElementById('modalTitle').innerText = displayName;
+  document.getElementById('modalSub').innerText = displayIng;
+  document.getElementById('modalNotes').value = '';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+async function confirmOrder() {
+  const tableNum = document.getElementById('tableNum').value || "Mesa ?";
+  const obs = document.getElementById('modalNotes').value;
+  
+  const res = await fetch('/api/order', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ 
+        pizza_id: selectedPizza.id, 
+        table: tableNum, 
+        notes: obs 
+    })
+  });
+
+  if (res.ok) {
+    showToast(`🍕 ${selectedPizza.name} ${uiI18n[currentLang].msg}`, 'success');
+    closeModal();
+  }
+}
+
+function showToast(m, type) {
+  const t = document.getElementById('toast');
+  t.innerText = m; t.className = `toast show success`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Inicia o sistema
+initSystem();
+</script>
+</body>
+</html>
