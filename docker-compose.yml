@@ -1,0 +1,11 @@
+services:
+  pizza:
+    build: .
+    ports:
+      - "80:5000"
+    volumes:
+      - ./data:/data
+    env_file: 
+      - .env
+    restart: unless-stopped
+    

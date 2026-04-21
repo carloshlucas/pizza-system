@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍕 {{ pizzeria_name }} Pizzaria — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8; --surface: #fff; --rust: #c94a2a; --rust-dark: #a33820;
+    --char: #1a1208; --muted: #8a7f72; --gold: #d4a843; --green: #3a8f44;
+    --border: #e0d6c8; --shadow: 0 2px 16px rgba(26,18,8,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--char);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--char);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-image: radial-gradient(circle at 20% 50%, #2d1e0e 0%, var(--char) 60%);
+  }
+
+  .login-logo {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 0.25rem;
+    text-align: center;
+  }
+  .login-logo span { color: var(--rust); }
+  .login-tagline {
+    color: #7a6a58;
+    font-size: 0.8rem;
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin-bottom: 0.3rem;
+  }
+  .card p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 1.75rem;
+  }
+
+  .role-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .role-btn {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #fdf9f4;
+  }
+  .role-btn:hover { border-color: var(--rust); }
+  .role-btn.active {
+    border-color: var(--rust);
+    background: rgba(201,74,42,0.06);
+  }
+  .role-btn .role-icon { font-size: 1.6rem; display: block; margin-bottom: 0.3rem; }
+  .role-btn .role-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--char);
+  }
+
+  .field { margin-bottom: 1.25rem; }
+  .field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+  }
+  .field input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    background: #fdf9f4;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--rust); }
+
+  .btn-login {
+    width: 100%;
+    background: var(--rust);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-login:hover { background: var(--rust-dark); }
+
+  .error {
+    background: rgba(201,74,42,0.08);
+    border: 1px solid rgba(201,74,42,0.3);
+    color: var(--rust);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    text-align: center;
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #7a6a58;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="login-logo">{{ pizzeria_name }} <span>Pizzaria</span></div>
+<div class="login-tagline">Staff Access</div>
+
+<div class="card">
+  <h2>Welcome back 👋</h2>
+  <p>Select your role and enter the password to continue.</p>
+
+  {% if error %}
+  <div class="error">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <div class="role-picker">
+      <label class="role-btn active" id="role-admin-btn" onclick="selectRole('admin')">
+        <input type="radio" name="role" value="admin" style="display:none" checked>
+        <span class="role-icon">🛠️</span>
+        <span class="role-label">Admin</span>
+      </label>
+      <label class="role-btn" id="role-kitchen-btn" onclick="selectRole('kitchen')">
+        <input type="radio" name="role" value="kitchen" style="display:none">
+        <span class="role-icon">👨‍🍳</span>
+        <span class="role-label">Kitchen</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" autofocus placeholder="Enter password" required />
+    </div>
+
+    <button type="submit" class="btn-login">Sign In →</button>
+  </form>
+
+  <a href="/" class="back-link">← Back to menu</a>
+</div>
+
+<script>
+function selectRole(role) {
+  document.getElementById('role-admin-btn').classList.toggle('active', role === 'admin');
+  document.getElementById('role-kitchen-btn').classList.toggle('active', role === 'kitchen');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# env / secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# database / persistent data
+data/
+
+# docker
+docker-compose.override.yml
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
